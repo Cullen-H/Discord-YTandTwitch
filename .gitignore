@@ -2,3 +2,6 @@ venv/
 botcfg.py
 data/*
 __pycache__/
+cogs/__pycache__/
+cogs/youtube/__pycache__/
+cogs/twitch/__pycache__/
