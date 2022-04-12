@@ -12,7 +12,6 @@ class YtUpdate(commands.Cog):
 
     @commands.command(aliases=['setchannel', 'SetChannel'])
     @commands.has_permissions(administrator=True)
-    async def set_channel(self, ctx, channel_url, *, upload_message):
     async def set_channel(self, ctx, channel_url_extension, *, upload_message=None):
         """
         Sets the current text channel up for notifications for a given youtube channel. 
