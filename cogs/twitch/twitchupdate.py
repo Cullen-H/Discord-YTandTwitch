@@ -2,33 +2,38 @@ import os
 import json
 import requests
 from discord.ext import tasks, commands
-from twitchAPI.twitch import Twitch
 from discord.utils import get
-
 from botcfg import TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET
 
-twitch = Twitch(TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET)
-twitch.authenticate_app([])
-TWITCH_STREAM_API_ENDPOINT_V5 = "https://api.twitch.tv/kraken/streams/{}"
-API_HEADERS = {
-        'Client-ID': TWITCH_CLIENT_ID,
-        'Accept': 'application/vnd.twitchtv.v5+json'
-        }
+def get_oauth_token():
+    body = {
+            "client_id": TWITCH_CLIENT_ID,
+            "client_secret": TWITCH_CLIENT_SECRET,
+            "grant_type": "client_credentials"
+            }
+    response = requests.post("https://id.twitch.tv/oauth2/token", body)
+    keys = response.json()
+    return keys["access_token"]
 
 def get_stream(user):
+    url = "https://api.twitch.tv/helix/streams?user_login="+user
+    token = get_oauth_token()
+
+    HEADERS = {
+            "Client-ID": client_id,
+            "Authorization": "Bearer "+token
+            }
+    
     try:
-        userid = twitch.get_users(logins=[user])['data'][0]['id']
-        url = TWITCH_STREAM_API_ENDPOINT_V5.format(userid)
-        try:
-            response = requests.Session().get(url, headers=API_HEADERS).json()
-            if 'stream' in response:
-                return response["stream"]
-            return None
-        except Exception as e:
-            print(f"Failed to get user data for {user}. Exception: {e}")
-            return None
-    except IndexError:
-        return None
+        response = requests.get(url, headers=HEADERS).json()
+        if len(response['data']) > 0:
+            data = response["data"][0]
+            return {"title": data["title"], "game_name": data["game_name"]}
+    except Exception as e:
+        print("Exception while getting stream: ", e)
+
+    return None
+
 
 def init_startup_json():
     with open("data/twitchdata.json", "r") as f:
@@ -83,7 +88,9 @@ class TwitchUpdate(commands.Cog):
 
         for streamer in data:
             stream = get_stream(streamer)
-            if stream:
+            print(stream)
+            if stream and data[streamer]["is_live"] == 0:
+                print('New stream found for {}'.format(streamer))
                 discord_server = self.client.get_guild(data[streamer]["discord_server_id"])
                 discord_channel = discord_server.get_channel(int(data[streamer]["discord_channel_id"]))
                 if not data[streamer]["is_live"]:
