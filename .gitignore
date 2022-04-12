@@ -1,0 +1,4 @@
+venv/
+botcfg.py
+data/*
+__pycache__/
