@@ -56,6 +56,7 @@ class TwitchUpdate(commands.Cog):
             if streamer == twitch_name:
                 data[twitch_name]["discord_channel_id"] = discord_channel_id
                 data[twitch_name]["role_to_mention"] = role_to_mention
+                data[twitch_name]["stream_url"] = stream_url
                 try:
                     with open("data/twitchdata.json", "r") as f:
                         json.dump(data, f)
@@ -67,6 +68,7 @@ class TwitchUpdate(commands.Cog):
                 "discord_channel_id": discord_channel_id,
                 "discord_server_id": discord_server_id,
                 "role_to_mention": role_to_mention,
+                "stream_url": stream_url,
                 "is_live": 0
                 }
 
