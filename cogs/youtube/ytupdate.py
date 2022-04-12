@@ -12,7 +12,7 @@ class YtUpdate(commands.Cog):
 
     @commands.command(aliases=['setchannel', 'SetChannel'])
     @commands.has_permissions(administrator=True)
-    async def set_channel(self, ctx, channel_url_extension, *, upload_message=None):
+    async def set_channel(self, ctx, channel_url, discord_channel_id, *, upload_message=None):
         """
         Sets the current text channel up for notifications for a given youtube channel. 
         Optional Second paramater for roles to ping eg. @everyone (input as 'everyone')
@@ -23,36 +23,36 @@ class YtUpdate(commands.Cog):
             data = json.load(f)
 
         for channel in data:
-            if channel == "channel_url_extension":
-                data[channel]["discord_channel_id"] = ctx.channel.id
-                data[channel]["message"] = upload_message if upload_message is not None else data[channel]["message"]
+            if channel == "channel_url":
+                data[channel]["discord_channel_id"] = discord_channel_id
+                data[channel]["message"] = upload_message
                 try:
-                    channel_url = f"https://www.youtube.com/channel/{channel}"
                     response = requests.get(channel_url+"/videos").text
                     latest_video_url = "https://www.youtube.com/watch?v=" + re.search('(?<="videoId":").*?(?=")', response).group()
                 except:
                     print(f"failed to get latest video from {channel}.")
                     latest_video_url = ""
+
                 data[channel]["latest_video_url"] = latest_video_url
+
                 with open("data/ytdata.json", "w") as f:
                     json.dump(data, f)
                     await ctx.send(f"Updated {channel}")
+
                 return
 
         try:
-            channel_url = f"https://www.youtube.com/channel/{channel_url_extension}"
             response = requests.get(channel_url+"/videos").text
             latest_video_url = "https://www.youtube.com/watch?v=" + re.search('(?<="videoId":").*?(?=")', response).group()
-            discord_channel_id = ctx.channel.id
             discord_server_id = ctx.guild.id
         except Exception as e:
-            print(f"failed to get latest video from {channel_url_extension}.")
+            print(f"failed to get latest video from {channel_url}.")
             print(e)
             latest_video_url = ""
 
         message = upload_message if upload_message else ""
 
-        data[channel_url_extension] = {
+        data[channel_url] = {
                 "latest_video_url": latest_video_url, 
                 "message": message, 
                 "discord_channel_id": discord_channel_id,
@@ -61,7 +61,7 @@ class YtUpdate(commands.Cog):
 
         with open("data/ytdata.json", "w") as f:
             json.dump(data, f)
-            await ctx.send(f"Added {channel_url_extension}")
+            await ctx.send(f"Added {channel_url}")
 
     @tasks.loop(seconds=30.0, minutes=0, hours=0, count=None)
     async def update_videos(self):
@@ -74,8 +74,7 @@ class YtUpdate(commands.Cog):
 
         for channel in data:
             try:
-                channel_url = f"https://www.youtube.com/channel/{channel}"
-                response = requests.get(channel_url+"/videos").text
+                response = requests.get(channel+"/videos").text
             except Exception as e:
                 print(f"failed to retrieve data for {channel}")
                 print(e)
