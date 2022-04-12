@@ -20,12 +20,12 @@ def get_stream(user):
         userid = twitch.get_users(logins=[user])['data'][0]['id']
         url = TWITCH_STREAM_API_ENDPOINT_V5.format(userid)
         try:
-            response = requests.get(url, headers=API_HEADERS).json()
-            if 'stream' in res:
-                return res["stream"]
+            response = requests.Session().get(url, headers=API_HEADERS).json()
+            if 'stream' in response:
+                return response["stream"]
             return None
         except Exception as e:
-            print(f"Failed to get user data for {user}")
+            print(f"Failed to get user data for {user}. Exception: {e}")
             return None
     except IndexError:
         return None

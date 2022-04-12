@@ -75,6 +75,7 @@ class YtUpdate(commands.Cog):
         for channel in data:
             try:
                 response = requests.get(channel+"/videos").text
+                latest_video_url = "https://www.youtube.com/watch?v=" + re.search('(?<="videoId":").*?(?=")', response).group()
             except Exception as e:
                 print(f"failed to retrieve data for {channel}")
                 print(e)
